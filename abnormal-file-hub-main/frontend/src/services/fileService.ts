@@ -16,8 +16,8 @@ export const fileService = {
     return response.data;
   },
 
-  async getFiles(): Promise<FileType[]> {
-    const response = await axios.get(`${API_URL}/files/`);
+  async getFiles(url?: string): Promise<any> {
+    const response = await axios.get(url || `${API_URL}/files/`);
     return response.data;
   },
 
@@ -46,4 +46,4 @@ export const fileService = {
       throw new Error('Failed to download file');
     }
   },
-}; 
+};

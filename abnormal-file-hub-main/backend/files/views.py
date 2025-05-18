@@ -8,12 +8,32 @@ from django.core.files.base import ContentFile
 from rest_framework.decorators import action
 from django.db import models
 from django.core.files.base import File as DjangoFile
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, DateFromToRangeFilter, NumberFilter
+from rest_framework.pagination import CursorPagination
 
 # Create your views here.
+
+class FileFilter(FilterSet):
+    size_min = NumberFilter(field_name="size", lookup_expr='gte')
+    size_max = NumberFilter(field_name="size", lookup_expr='lte')
+    uploaded_at = DateFromToRangeFilter()
+
+    class Meta:
+        model = File
+        fields = ['file_type', 'uploaded_at', 'size_min', 'size_max']
+
+class FileCursorPagination(CursorPagination):
+    page_size = 3
+    ordering = '-uploaded_at'  # or '-id' for strict uniqueness
 
 class FileViewSet(viewsets.ModelViewSet):
     queryset = File.objects.all()
     serializer_class = FileSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = FileFilter
+    search_fields = ['original_filename']
+    pagination_class = FileCursorPagination  
 
     def create(self, request, *args, **kwargs):
         file_obj = request.FILES.get('file')
