@@ -15,6 +15,8 @@ class File(models.Model):
     file_type = models.CharField(max_length=100)
     size = models.BigIntegerField()
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    file_hash = models.CharField(max_length=64, db_index=True)  # Add this line
+
     
     class Meta:
         ordering = ['-uploaded_at']
