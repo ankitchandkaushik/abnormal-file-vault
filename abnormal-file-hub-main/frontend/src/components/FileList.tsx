@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { fileService } from '../services/fileService';
 import { File as FileType } from '../types/file';
 import { DocumentIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
@@ -6,12 +6,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export const FileList: React.FC = () => {
   const queryClient = useQueryClient();
+  const [pageUrl, setPageUrl] = useState<string | undefined>(undefined);
 
   // Query for fetching files
-  const { data: files, isLoading, error } = useQuery({
-    queryKey: ['files'],
-    queryFn: fileService.getFiles,
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['files', pageUrl],
+    queryFn: () => fileService.getFiles(pageUrl), // <-- pass pageUrl here
+    placeholderData: undefined,
   });
+
+  const files = data?.results || [];
+  const next = data?.next;
+  const previous = data?.previous;
 
   // Mutation for deleting files
   const deleteMutation = useMutation({
@@ -99,7 +105,7 @@ export const FileList: React.FC = () => {
       ) : (
         <div className="mt-6 flow-root">
           <ul className="-my-5 divide-y divide-gray-200">
-            {files.map((file) => (
+            {files.map((file: FileType) => (
               <li key={file.id} className="py-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
@@ -140,6 +146,14 @@ export const FileList: React.FC = () => {
           </ul>
         </div>
       )}
+      <div className="flex justify-between mt-4">
+        <button onClick={() => setPageUrl(previous)} disabled={!previous} className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+          Previous
+        </button>
+        <button onClick={() => setPageUrl(next)} disabled={!next} className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+          Next
+        </button>
+      </div>
     </div>
   );
-}; 
+};
