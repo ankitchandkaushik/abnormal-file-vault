@@ -46,4 +46,9 @@ export const fileService = {
       throw new Error('Failed to download file');
     }
   },
+
+  async getStorageSavings(): Promise<any> {
+    const response = await axios.get(`${API_URL}/files/storage_savings/`);
+    return response.data;
+  },
 };
