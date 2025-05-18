@@ -10,18 +10,34 @@ interface FileUploadProps {
 export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
     mutationFn: fileService.uploadFile,
-    onSuccess: () => {
-      // Invalidate and refetch files query
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
       setSelectedFile(null);
+      setError(null);
+      setSuccess('File uploaded successfully!');
       onUploadSuccess();
     },
-    onError: (error) => {
-      setError('Failed to upload file. Please try again.');
+    onError: (error: any) => {
+      let message = 'Failed to upload file. Please try again.';
+      if (error?.response?.data) {
+        if (typeof error.response.data === 'string') {
+          message = error.response.data;
+        } else if (typeof error.response.data === 'object') {
+          const firstKey = Object.keys(error.response.data)[0];
+          if (firstKey && error.response.data[firstKey]) {
+            message = Array.isArray(error.response.data[firstKey])
+              ? error.response.data[firstKey][0]
+              : error.response.data[firstKey];
+          }
+        }
+      }
+      setError(message);
+      setSuccess(null);
       console.error('Upload error:', error);
     },
   });
@@ -86,6 +102,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
             {error}
           </div>
         )}
+        {success && (
+          <div className="text-sm text-green-700 bg-green-50 p-2 rounded">
+            {success}
+          </div>
+        )}
         <button
           onClick={handleUpload}
           disabled={!selectedFile || uploadMutation.isPending}
@@ -126,4 +147,4 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       </div>
     </div>
   );
-}; 
+};
